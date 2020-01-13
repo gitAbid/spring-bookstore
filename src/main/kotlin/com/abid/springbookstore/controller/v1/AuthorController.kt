@@ -23,7 +23,7 @@ class AuthorController(val authorService: AuthorService) {
     }
 
     @PostMapping
-    fun addAuthors(@RequestBody authorDTO: AuthorDTO): ResponseEntity<ResponseDTO<AuthorDTO>> {
+    fun addAuthor(@RequestBody authorDTO: AuthorDTO): ResponseEntity<ResponseDTO<AuthorDTO>> {
         return ResponseEntity(authorService.addAuthor(authorDTO), HttpStatus.OK)
     }
 
