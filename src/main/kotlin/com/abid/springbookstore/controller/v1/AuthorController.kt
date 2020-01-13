@@ -27,9 +27,9 @@ class AuthorController(val authorService: AuthorService) {
         return ResponseEntity(authorService.addAuthor(authorDTO), HttpStatus.OK)
     }
 
-    @PutMapping("/{id}")
-    fun updateAuthor(@PathVariable id: Long) {
-
+    @PutMapping
+    fun updateAuthor(@RequestBody authorDTO: AuthorDTO): ResponseEntity<ResponseDTO<AuthorDTO>> {
+        return ResponseEntity(authorService.updateAuthor(authorDTO), HttpStatus.OK)
     }
 
     @DeleteMapping("/{id}")

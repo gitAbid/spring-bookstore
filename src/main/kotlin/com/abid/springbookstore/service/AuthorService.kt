@@ -56,16 +56,13 @@ class AuthorService(val authorRepository: AuthorRepository, val bookRepository: 
         val responseDTO = ResponseDTO<AuthorDTO>(error = "")
         val books = arrayListOf<Book>()
         authorDTO.books.forEach {
-            if (it != null) {
+            it?.let {
                 val book = bookRepository.findById(it)
-                if (book.isPresent) {
-                    books.add(book.get())
-                } else {
+                if (book.isPresent) books.add(book.get()) else {
                     responseDTO.error += "No book found with id of $it."
                     isValid = false;
                 }
-
-            } else {
+            } ?: run {
                 isValid = false;
                 responseDTO.error += "Invalid book id $it. Please provide a valid book id."
             }
@@ -86,7 +83,47 @@ class AuthorService(val authorRepository: AuthorRepository, val bookRepository: 
         return responseDTO
     }
 
-    fun updateAuthor() {
+    fun updateAuthor(authorDTO: AuthorDTO): ResponseDTO<AuthorDTO> {
+        val responseDTO = ResponseDTO<AuthorDTO>(error = "")
+        var isValid = true
+        val books = arrayListOf<Book>()
 
+        authorDTO.id?.let {
+            val authorOptional = authorRepository.findById(it)
+            if (authorOptional.isPresent) {
+                authorDTO.books.forEach {
+                    it?.let {
+                        val book = bookRepository.findById(it)
+                        if (book.isPresent) books.add(book.get()) else {
+                            responseDTO.error += "No book found with id of $it."
+                            isValid = false;
+                        }
+                    } ?: run {
+                        isValid = false;
+                        responseDTO.error += "Invalid book id $it. Please provide a valid book id."
+                    }
+                }
+
+                if (isValid) {
+                    var author = Author(id = authorDTO.id, name = authorDTO.name, books = books)
+                    author = authorRepository.save(author)
+                    responseDTO.data = AuthorDTO(
+                            id = author.id,
+                            name = author.name,
+                            books = author.books
+                                    .stream()
+                                    .map { book -> book.id }
+                                    .collect(Collectors.toList()))
+                }
+
+            } else {
+                responseDTO.error += "No author found with id of $it."
+            }
+
+        } ?: run {
+            responseDTO.error = "Invalid author id ${authorDTO.id}. Please provide a valid id"
+        }
+
+        return responseDTO;
     }
 }
