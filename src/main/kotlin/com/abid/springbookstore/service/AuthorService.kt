@@ -47,8 +47,23 @@ class AuthorService(val authorRepository: AuthorRepository, val bookRepository: 
         return responseDTO
     }
 
-    fun deleteAuthor(id: Long) {
+    fun deleteAuthor(id: Long): ResponseDTO<String> {
+        val author = authorRepository.findById(id)
+        val responseDTO = ResponseDTO<String>()
 
+        if (author.isPresent) {
+            try {
+                authorRepository.delete(author.get())
+                responseDTO.data = "Author deleted successfully with id of $id."
+            } catch (e: Exception) {
+                responseDTO.error = e.message
+            }
+
+        } else {
+            responseDTO.error = "No author found with id $id"
+        }
+
+        return responseDTO
     }
 
     fun addAuthor(authorDTO: AuthorDTO): ResponseDTO<AuthorDTO> {

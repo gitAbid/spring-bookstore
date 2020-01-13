@@ -33,7 +33,7 @@ class AuthorController(val authorService: AuthorService) {
     }
 
     @DeleteMapping("/{id}")
-    fun deleteAuthor(@PathVariable id: Long) {
-
+    fun deleteAuthor(@PathVariable id: Long): ResponseEntity<ResponseDTO<String>> {
+        return ResponseEntity(authorService.deleteAuthor(id), HttpStatus.OK)
     }
 }
