@@ -22,7 +22,8 @@ class BookService(val authorRepository: AuthorRepository, val bookRepository: Bo
             val bookDTOs = arrayListOf<BookDTO>()
             books.forEach {
                 val authors = it.authors.stream().map { it.id }.collect(Collectors.toList())
-                val bookDTO = BookDTO(id = it.id, title = it.title, authors = authors, description = it.description)
+                val bookDTO = BookDTO(id = it.id, title = it.title, authors = authors, description = it.description,
+                        published_date = it.publishedDate, publisher = it.publisher)
                 bookDTOs.add(bookDTO)
 
             }
@@ -39,7 +40,8 @@ class BookService(val authorRepository: AuthorRepository, val bookRepository: Bo
         if (bookOptional.isPresent) {
             val book = bookOptional.get()
             val authors = book.authors.stream().map { it.id }.collect(Collectors.toList())
-            val bookDTO = BookDTO(id = book.id, title = book.title, authors = authors, description = book.description)
+            val bookDTO = BookDTO(id = book.id, title = book.title, authors = authors, description = book.description,
+                    published_date = book.publishedDate, publisher = book.publisher)
             responseDTO.data = bookDTO
         } else {
             responseDTO.error = "No book found with id of $id"
@@ -67,7 +69,6 @@ class BookService(val authorRepository: AuthorRepository, val bookRepository: Bo
         return responseDTO
     }
 
-    @Transactional
     fun addBook(bookDTO: BookDTO): ResponseDTO<BookDTO> {
         var isValid = true
         val responseDTO = ResponseDTO<BookDTO>(error = "")
@@ -86,15 +87,15 @@ class BookService(val authorRepository: AuthorRepository, val bookRepository: Bo
         }
 
         if (isValid) {
-            val authorList=authors.map{
-                authorRepository.save(it)
-            }
-            var book = Book(title = bookDTO.title, authors = authorList, description = bookDTO.description)
-            book = bookRepository.saveAndFlush(book)
+            var book = Book(title = bookDTO.title, authors = authors, description = bookDTO.description,
+                    publishedDate = bookDTO.published_date, publisher = bookDTO.publisher)
+            book = bookRepository.save(book)
             responseDTO.data = BookDTO(
                     id = book.id,
                     title = book.title,
                     description = book.description,
+                    published_date = book.publishedDate,
+                    publisher = book.publisher,
                     authors = book.authors
                             .stream()
                             .map { it.id }
@@ -104,7 +105,6 @@ class BookService(val authorRepository: AuthorRepository, val bookRepository: Bo
         return responseDTO
     }
 
-    @Transactional
     fun updateAuthor(bookDTO: BookDTO): ResponseDTO<BookDTO> {
         val responseDTO = ResponseDTO<BookDTO>(error = "")
         var isValid = true
@@ -127,15 +127,17 @@ class BookService(val authorRepository: AuthorRepository, val bookRepository: Bo
                 }
 
                 if (isValid) {
-                    val authorList=authors.map{
-                        authorRepository.save(it)
-                    }
-                    var book = Book(id = bookDTO.id, title = bookDTO.title, authors = authorList, description = bookDTO.description)
+                    var book = Book(id = bookDTO.id, title = bookDTO.title,
+                            authors = authors, description = bookDTO.description,
+                            publishedDate = bookDTO.published_date,
+                            publisher = bookDTO.publisher)
                     book = bookRepository.saveAndFlush(book)
                     responseDTO.data = BookDTO(
                             id = book.id,
                             title = book.title,
                             description = book.description,
+                            published_date = book.publishedDate,
+                            publisher = book.publisher,
                             authors = book.authors
                                     .stream()
                                     .map { it.id }
