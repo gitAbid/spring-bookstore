@@ -15,15 +15,15 @@ class SpringBookstoreApplication {
 
     @Bean
     fun run(authorRepository: AuthorRepository, bookRepository: BookRepository) = CommandLineRunner {
-        val book = Book(title = "New BOok1")
-        val book1 = Book(title = "New BOok12")
-        val book2 = Book(title = "New BOok13")
-        val book3 = Book(title = "New BOok4")
+        val book = Book(title = "Adolescent Health Screening: an Update in the Age of Big Data")
+        val book1 = Book(title = "Atlas of Wound Healing")
+        val book2 = Book(title = "Anatomy, Imaging and Surgery of the Intracranial Dural Venous Sinuses")
+        val book3 = Book(title = "Complications in Male Circumcision")
 
-        val author = Author(name = "Abid", books = listOf(book))
-        val author1 = Author(name = "Abid1")
-        val author2 = Author(name = "Abid2")
-        val author3 = Author(name = "Abid3")
+        val author = Author(name = "William Shakespeare", books = listOf(book))
+        val author1 = Author(name = "Emily Dickinson")
+        val author2 = Author(name = "H. P. Lovecraft")
+        val author3 = Author(name = "Arthur Conan Doyle")
 
 
 

@@ -6,14 +6,17 @@ import com.abid.springbookstore.service.AuthorService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
+import java.util.*
 
 @RestController
 @RequestMapping("/v1/authors")
 class AuthorController(val authorService: AuthorService) {
 
     @GetMapping
-    fun getAuthors(): ResponseEntity<ResponseDTO<List<AuthorDTO>>> {
-        return ResponseEntity(authorService.getAllAuthors(), HttpStatus.OK)
+    fun getAuthors(@RequestParam limit: Optional<Int>, @RequestParam sort: Optional<String>):
+            ResponseEntity<ResponseDTO<List<AuthorDTO>>> {
+        return ResponseEntity(authorService.getAllAuthors(limit.orElse(Int.MAX_VALUE), sort.orElse("id")),
+                HttpStatus.OK)
     }
 
     @GetMapping("/{id}")

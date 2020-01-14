@@ -6,16 +6,19 @@ import com.abid.springbookstore.model.Author
 import com.abid.springbookstore.model.Book
 import com.abid.springbookstore.repository.AuthorRepository
 import com.abid.springbookstore.repository.BookRepository
+import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Service
 import java.util.stream.Collectors
 
 @Service
 class AuthorService(val authorRepository: AuthorRepository, val bookRepository: BookRepository) {
 
-    fun getAllAuthors(): ResponseDTO<List<AuthorDTO>> {
+    fun getAllAuthors(limit: Int, sort: String): ResponseDTO<List<AuthorDTO>> {
+        val pageable= PageRequest.of(0,limit, Sort.by(sort))
         val responseDTO = ResponseDTO<List<AuthorDTO>>()
-        val authors = authorRepository.findAll()
-        if (authors.isEmpty()) {
+        val authors = authorRepository.findAll(pageable)
+        if (authors.isEmpty) {
             responseDTO.error = "No authors found!"
         } else {
             val authorDTOs = arrayListOf<AuthorDTO>()
