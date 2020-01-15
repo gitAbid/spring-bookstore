@@ -66,15 +66,12 @@ class AuthorService(val authorRepository: AuthorRepository, val bookRepository: 
         }
 
         if (isValid) {
-            var author = Author(name = authorDTO.name, books = books)
-            author = authorRepository.save(author)
-            responseDTO.data = AuthorDTO(
-                    id = author.id,
-                    name = author.name,
-                    books = author.books
-                            .stream()
-                            .map { book -> book.id }
-                            .collect(Collectors.toList()))
+            responseDTO.data = authorRepository.save(Author(name = authorDTO.name, books = books)).let {
+                AuthorDTO(id = it.id, name = it.name, books = it.books
+                                .stream()
+                                .map { book -> book.id }
+                                .collect(Collectors.toList()))
+            }
         }
 
         return responseDTO
