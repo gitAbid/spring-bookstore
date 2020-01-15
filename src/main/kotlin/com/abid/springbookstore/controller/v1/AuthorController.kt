@@ -3,6 +3,8 @@ package com.abid.springbookstore.controller.v1
 import com.abid.springbookstore.dto.AuthorDTO
 import com.abid.springbookstore.dto.ResponseDTO
 import com.abid.springbookstore.service.AuthorService
+import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Sort
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -15,7 +17,7 @@ class AuthorController(val authorService: AuthorService) {
     @GetMapping
     fun getAuthors(@RequestParam limit: Optional<Int>, @RequestParam sort: Optional<String>):
             ResponseEntity<ResponseDTO<List<AuthorDTO>>> {
-        return ResponseEntity(authorService.getAllAuthors(limit.orElse(Int.MAX_VALUE), sort.orElse("id")),
+        return ResponseEntity(authorService.getAllAuthors(PageRequest.of(0, limit.orElse(Int.MAX_VALUE), Sort.by(sort.orElse("id")))),
                 HttpStatus.OK)
     }
 

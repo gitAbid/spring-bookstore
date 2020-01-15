@@ -14,61 +14,40 @@ import java.util.stream.Collectors
 @Service
 class AuthorService(val authorRepository: AuthorRepository, val bookRepository: BookRepository) {
 
-    fun getAllAuthors(limit: Int, sort: String): ResponseDTO<List<AuthorDTO>> {
-        val pageable= PageRequest.of(0,limit, Sort.by(sort))
-        val responseDTO = ResponseDTO<List<AuthorDTO>>()
+    //TODO fixme issue misleading {Why sending books too?}
+    //TODO fixme send paging object from controller
+    fun getAllAuthors(pageable: PageRequest): ResponseDTO<List<AuthorDTO>> {
         val authors = authorRepository.findAll(pageable)
-        if (authors.isEmpty) {
-            responseDTO.error = "No authors found!"
-        } else {
-            val authorDTOs = arrayListOf<AuthorDTO>()
-            authors.forEach {
-                val bookIds = it.books.stream().map { it.id }.collect(Collectors.toList())
-                val authorDTO = AuthorDTO(id = it.id, name = it.name, books = bookIds)
-                authorDTOs.add(authorDTO)
+        return if (authors.isEmpty) ResponseDTO(error = "No authors found!")
+        else ResponseDTO(data = authors.map { it ->
+            AuthorDTO(id = it.id, name = it.name, books = it.books.map { it.id })
+        }.toList())
 
-            }
-            responseDTO.data = authorDTOs
-        }
-
-        return responseDTO
     }
 
     fun getAuthor(id: Long): ResponseDTO<AuthorDTO> {
-        val responseDTO = ResponseDTO<AuthorDTO>()
         val author = authorRepository.findById(id)
-
-        if (author.isPresent) {
-            val authorData = author.get()
-            val bookIds = authorData.books.stream().map { authorData.id }.collect(Collectors.toList())
-            val authorDTO = AuthorDTO(id = authorData.id, name = authorData.name, books = bookIds)
-            responseDTO.data = authorDTO
-        } else {
-            responseDTO.error = "No authors found with id of $id"
-        }
-
-        return responseDTO
+        return if (author.isPresent) ResponseDTO(data = author.get().let { it ->
+            AuthorDTO(id = it.id, name = it.name, books = it.books.map { it.id })
+        })
+        else ResponseDTO(error = "No authors found with id of $id")
     }
 
     fun deleteAuthor(id: Long): ResponseDTO<String> {
         val author = authorRepository.findById(id)
-        val responseDTO = ResponseDTO<String>()
-
-        if (author.isPresent) {
+        return if (author.isPresent) {
             try {
                 authorRepository.delete(author.get())
-                responseDTO.data = "Author deleted successfully with id of $id."
+                ResponseDTO(data = "Author deleted successfully with id of $id.")
             } catch (e: Exception) {
-                responseDTO.error = e.message
+                return ResponseDTO(error = e.message)
             }
-
         } else {
-            responseDTO.error = "No author found with id $id"
+            ResponseDTO(error = "No author found with id $id")
         }
-
-        return responseDTO
     }
 
+    //TODO Next Session Thursday
     fun addAuthor(authorDTO: AuthorDTO): ResponseDTO<AuthorDTO> {
         var isValid = true
         val responseDTO = ResponseDTO<AuthorDTO>(error = "")
@@ -123,17 +102,17 @@ class AuthorService(val authorRepository: AuthorRepository, val bookRepository: 
                 }
 
                 if (isValid) {
-                    var author = Author(id = authorDTO.id, name = authorDTO.name, books = books)
-                    author = authorRepository.save(author)
-                    responseDTO.data = AuthorDTO(
-                            id = author.id,
-                            name = author.name,
-                            books = author.books
-                                    .stream()
-                                    .map { book -> book.id }
-                                    .collect(Collectors.toList()))
+                    responseDTO.data = Author(id = authorDTO.id, name = authorDTO.name, books = books).let { it ->
+                        authorRepository.save(it)
+                        AuthorDTO(
+                                id = it.id,
+                                name = it.name,
+                                books = it.books
+                                        .stream()
+                                        .map { book -> book.id }
+                                        .collect(Collectors.toList()))
+                    }
                 }
-
             } else {
                 responseDTO.error += "No author found with id of $it."
             }
