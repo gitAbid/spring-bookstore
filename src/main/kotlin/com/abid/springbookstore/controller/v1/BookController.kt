@@ -3,6 +3,8 @@ package com.abid.springbookstore.controller.v1
 import com.abid.springbookstore.dto.BookDTO
 import com.abid.springbookstore.dto.ResponseDTO
 import com.abid.springbookstore.service.BookService
+import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Sort
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -16,7 +18,9 @@ class BookController(val bookService: BookService) {
     @GetMapping
     fun getBooks(@RequestParam limit: Optional<Int>, @RequestParam sort: Optional<String>):
             ResponseEntity<ResponseDTO<List<BookDTO>>> {
-        return ResponseEntity(bookService.getAllBooks(limit.orElse(Int.MAX_VALUE), sort.orElse("id")), HttpStatus.OK)
+        return ResponseEntity(bookService.getAllBooks(PageRequest.of(0, limit.orElse(Int.MAX_VALUE),
+                Sort.by(sort.orElse("id"))
+        )), HttpStatus.OK)
     }
 
     @GetMapping("/{id}")
@@ -32,7 +36,7 @@ class BookController(val bookService: BookService) {
 
     @PutMapping
     fun updateBook(@RequestBody bookDTO: BookDTO): ResponseEntity<ResponseDTO<BookDTO>> {
-        return ResponseEntity(bookService.updateAuthor(bookDTO), HttpStatus.OK)
+        return ResponseEntity(bookService.updateBook(bookDTO), HttpStatus.OK)
     }
 
     @DeleteMapping("/{id}")

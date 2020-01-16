@@ -20,7 +20,7 @@ class SpringBookstoreApplication {
         val book2 = Book(title = "Anatomy, Imaging and Surgery of the Intracranial Dural Venous Sinuses")
         val book3 = Book(title = "Complications in Male Circumcision")
 
-        val author = Author(name = "William Shakespeare", books = listOf(book))
+        val author = Author(name = "William Shakespeare")
         val author1 = Author(name = "Emily Dickinson")
         val author2 = Author(name = "H. P. Lovecraft")
         val author3 = Author(name = "Arthur Conan Doyle")

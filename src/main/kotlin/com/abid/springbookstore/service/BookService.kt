@@ -2,149 +2,84 @@ package com.abid.springbookstore.service
 
 import com.abid.springbookstore.dto.BookDTO
 import com.abid.springbookstore.dto.ResponseDTO
-import com.abid.springbookstore.model.Author
 import com.abid.springbookstore.model.Book
 import com.abid.springbookstore.repository.AuthorRepository
 import com.abid.springbookstore.repository.BookRepository
 import org.springframework.data.domain.PageRequest
-import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Service
-import java.awt.print.Pageable
-import java.util.stream.Collectors
 
 @Service
-class BookService(val authorRepository: AuthorRepository, val bookRepository: BookRepository) {
+class BookService(val bookRepository: BookRepository) {
 
-    fun getAllBooks(limit: Int, sort: String): ResponseDTO<List<BookDTO>> {
-        val pageable=PageRequest.of(0,limit, Sort.by(sort))
-        val responseDTO = ResponseDTO<List<BookDTO>>()
+    fun getAllBooks(pageable: PageRequest): ResponseDTO<List<BookDTO>> {
         val books = bookRepository.findAll(pageable)
-        if (books.isEmpty) {
-            responseDTO.error = "No books found!"
+        return if (books.isEmpty) {
+            ResponseDTO(error = "No books found!")
         } else {
-            val bookDTOs = arrayListOf<BookDTO>()
-            books.forEach {
-                val authors = it.authors.stream().map { it.id }.collect(Collectors.toList())
-                val bookDTO = BookDTO(id = it.id, title = it.title, authors = authors, description = it.description,
+            ResponseDTO(data = books.map {
+                BookDTO(id = it.id, title = it.title, description = it.description,
                         published_date = it.publishedDate, publisher = it.publisher)
-                bookDTOs.add(bookDTO)
-
-            }
-            responseDTO.data = bookDTOs
+            }.toList())
         }
 
-        return responseDTO
     }
 
     fun getBook(id: Long): ResponseDTO<BookDTO> {
-        val responseDTO = ResponseDTO<BookDTO>()
         val bookOptional = bookRepository.findById(id)
-
-        if (bookOptional.isPresent) {
+        return if (bookOptional.isPresent) {
             val book = bookOptional.get()
-            val authors = book.authors.stream().map { it.id }.collect(Collectors.toList())
-            val bookDTO = BookDTO(id = book.id, title = book.title, authors = authors, description = book.description,
-                    published_date = book.publishedDate, publisher = book.publisher)
-            responseDTO.data = bookDTO
+            ResponseDTO(data = BookDTO(id = book.id, title = book.title, description = book.description,
+                    published_date = book.publishedDate, publisher = book.publisher))
         } else {
-            responseDTO.error = "No book found with id of $id"
+            ResponseDTO(error = "No book found with id of $id")
         }
-
-        return responseDTO
     }
 
     fun deleteBook(id: Long): ResponseDTO<String> {
         val book = bookRepository.findById(id)
-        val responseDTO = ResponseDTO<String>()
-
         if (book.isPresent) {
-            try {
+            return try {
                 bookRepository.delete(book.get())
-                responseDTO.data = "Book deleted successfully with id of $id."
+                ResponseDTO(data = "Book deleted successfully with id of $id.")
             } catch (e: Exception) {
-                responseDTO.error = e.message
+                ResponseDTO(error = e.message)
             }
 
         } else {
-            responseDTO.error = "No book found with id $id"
+            return ResponseDTO(error = "No book found with id $id")
         }
-
-        return responseDTO
     }
 
     fun addBook(bookDTO: BookDTO): ResponseDTO<BookDTO> {
-        var isValid = true
-        val responseDTO = ResponseDTO<BookDTO>(error = "")
-        val authors = arrayListOf<Author>()
-        bookDTO.authors.forEach {
-            it?.let {
-                val author = authorRepository.findById(it)
-                if (author.isPresent) authors.add(author.get()) else {
-                    responseDTO.error += "No author found with id of $it."
-                    isValid = false;
-                }
-            } ?: run {
-                isValid = false;
-                responseDTO.error += "Invalid author id $it. Please provide a valid author id."
-            }
+        return bookRepository.save(Book(title = bookDTO.title, description = bookDTO.description,
+                publishedDate = bookDTO.published_date, publisher = bookDTO.publisher)).let {
+            ResponseDTO(data = BookDTO(
+                    id = it.id,
+                    title = it.title,
+                    description = it.description,
+                    published_date = it.publishedDate,
+                    publisher = it.publisher
+            ))
         }
 
-        if (isValid) {
-            var book = Book(title = bookDTO.title, authors = authors, description = bookDTO.description,
-                    publishedDate = bookDTO.published_date, publisher = bookDTO.publisher)
-            book = bookRepository.save(book)
-            responseDTO.data = BookDTO(
-                    id = book.id,
-                    title = book.title,
-                    description = book.description,
-                    published_date = book.publishedDate,
-                    publisher = book.publisher,
-                    authors = book.authors
-                            .stream()
-                            .map { it.id }
-                            .collect(Collectors.toList()))
-        }
-
-        return responseDTO
     }
 
-    fun updateAuthor(bookDTO: BookDTO): ResponseDTO<BookDTO> {
+
+    fun updateBook(bookDTO: BookDTO): ResponseDTO<BookDTO> {
         val responseDTO = ResponseDTO<BookDTO>(error = "")
-        var isValid = true
-        val authors = arrayListOf<Author>()
-
         bookDTO.id?.let {
-            val authorOptional = authorRepository.findById(it)
-            if (authorOptional.isPresent) {
-                bookDTO.authors.forEach {
-                    it?.let {
-                        val author = authorRepository.findById(it)
-                        if (author.isPresent) authors.add(author.get()) else {
-                            responseDTO.error += "No author found with id of $it."
-                            isValid = false;
-                        }
-                    } ?: run {
-                        isValid = false;
-                        responseDTO.error += "Invalid author id $it. Please provide a valid author id."
-                    }
-                }
-
-                if (isValid) {
-                    var book = Book(id = bookDTO.id, title = bookDTO.title,
-                            authors = authors, description = bookDTO.description,
+            val bookOptional = bookRepository.findById(it)
+            if (bookOptional.isPresent) {
+                    bookRepository.save(Book(id = bookDTO.id, title = bookDTO.title,description = bookDTO.description,
                             publishedDate = bookDTO.published_date,
-                            publisher = bookDTO.publisher)
-                    book = bookRepository.saveAndFlush(book)
-                    responseDTO.data = BookDTO(
-                            id = book.id,
-                            title = book.title,
-                            description = book.description,
-                            published_date = book.publishedDate,
-                            publisher = book.publisher,
-                            authors = book.authors
-                                    .stream()
-                                    .map { it.id }
-                                    .collect(Collectors.toList()))
+                            publisher = bookDTO.publisher)).let {
+                        responseDTO.data = BookDTO(
+                                id = it.id,
+                                title = it.title,
+                                description = it.description,
+                                published_date = it.publishedDate,
+                                publisher = it.publisher)
+
                 }
             } else {
                 responseDTO.error += "No book found with id of $it."
